@@ -24,7 +24,10 @@ func GenerateFile(path string, src string, dst string, vars []*Var) error {
 
 	cl := bytes.Clone(bs)
 	for _, v := range vars {
-		cl = bytes.ReplaceAll(cl, []byte(v.Name), []byte(v.Replace))
+		cl = bytes.ReplaceAll(cl, []byte(v.Name), []byte(v.Temp))
+	}
+	for _, v := range vars {
+		cl = bytes.ReplaceAll(cl, []byte(v.Temp), []byte(v.Replace))
 	}
 	filename := strings.Replace(path, src, dst, -1)
 	return os.WriteFile(filename, cl, 0666)

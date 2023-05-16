@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 )
 
 type VarFile struct {
@@ -15,6 +16,7 @@ type VarFile struct {
 
 type Var struct {
 	Name    string    // name of the variable
+	Temp    string    // temp replacement to solve the issue of overriding variables
 	Replace string    // string to replce the variable
 	Files   []VarFile // files that contain the variable
 }
@@ -65,6 +67,11 @@ func ScanDir(dir string) ([]*Var, FileMap, error) {
 		ref.Files = varFiles
 		vars = append(vars, ref)
 	}
+
+	// sort vars in ascending order
+	sort.Slice(vars, func(i, j int) bool {
+		return vars[i].Name < vars[j].Name
+	})
 	return vars, files, nil
 }
 

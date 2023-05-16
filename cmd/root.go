@@ -3,6 +3,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"math/rand"
+	"strings"
+	"time"
 
 	"github.com/puoklam/gr/files"
 	"github.com/puoklam/gr/prompt"
@@ -44,6 +47,7 @@ var rootCmd = &cobra.Command{
 				return err
 			}
 			v.Replace = s
+			v.Temp = randString(8)
 		}
 		return files.Generate(src, dst, filemap)
 	},
@@ -58,4 +62,29 @@ func init() {
 
 func Exec() error {
 	return rootCmd.Execute()
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const (
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+func randString(n int) string {
+	src := rand.NewSource(time.Now().UnixNano())
+	sb := strings.Builder{}
+	sb.Grow(n)
+	for i, c, r := n-1, src.Int63(), letterIdxMax; i >= 0; {
+		if r == 0 {
+			c, r = src.Int63(), letterIdxMax
+		}
+		if j := int(c & letterIdxMask); j < len(letterBytes) {
+			sb.WriteByte(letterBytes[j])
+			i--
+		}
+		c >>= letterIdxBits
+		r--
+	}
+	return sb.String()
 }
