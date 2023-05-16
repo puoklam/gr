@@ -40,9 +40,10 @@ func Generate(dir string, dst string, files FileMap) error {
 		}
 		return nil
 	}
+
 	// convert slashes to os specific separator
-	// TODO: add trailing slash to dst
-	dir = filepath.FromSlash(dir)
-	dst = filepath.FromSlash(dst)
+	// remove trailing slashes
+	dir = filepath.Clean(dir)
+	dst = filepath.Clean(dst)
 	return filepath.WalkDir(dir, fs.WalkDirFunc(walk))
 }
