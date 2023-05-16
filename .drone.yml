@@ -3,11 +3,14 @@ type: docker
 name: default
 
 steps:
-- name: go_test
+- name: test
   image: golang:1.20
   environment:
     CGO_ENABLED: 0
     GO111MODULE: on
+  volumes:
+  - name: deps
+    path: /go
   commands:
   - go get -d -t ./...
   # - go build
@@ -19,3 +22,18 @@ steps:
     event:
     - push
     - pull_request
+
+- name: build
+  image: golang:1.20
+  environment:
+    CGO_ENABLED: 0
+    GO111MODULE: on
+  volumes:
+  - name: deps
+    path: /go
+  commands:
+  - go build
+
+volumes:
+- name: deps
+  temp: {}
