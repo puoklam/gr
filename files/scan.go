@@ -8,38 +8,33 @@ import (
 	"sort"
 )
 
-type VarFile struct {
-	ref    *Var
-	Path   string  // file path
-	Occurs [][]int // occurences of the target var
-}
-
 type Var struct {
-	Name    string    // name of the variable
-	Temp    string    // temp replacement to solve the issue of overriding variables
-	Replace string    // string to replce the variable
-	Files   []VarFile // files that contain the variable
+	Name    string   // name of the variable
+	Temp    string   // temp replacement to solve the issue of overriding variables
+	Replace string   // string to replce the variable
+	Paths   []string // files that contain the variable
 }
 
 type FileMap = map[string][]*Var
 
 func ScanDir(dir string) ([]*Var, FileMap, error) {
-	varmap := make(map[string]map[string][][]int)
+	// varname -> file path
+	vm := make(map[string][]string)
+
 	walk := func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !d.IsDir() {
-			filemap, err := ScanFile(path)
-			if err != nil {
-				return err
-			}
-			for name, s := range filemap {
-				if varmap[name] == nil {
-					varmap[name] = make(map[string][][]int)
-				}
-				varmap[name][path] = s
-			}
+		if d.IsDir() {
+			return nil
+		}
+		names, err := ScanFile(path)
+		if err != nil {
+			return err
+		}
+		for _, nb := range names {
+			name := string(nb)
+			vm[name] = append(vm[name], string(path))
 		}
 		return nil
 	}
@@ -49,49 +44,34 @@ func ScanDir(dir string) ([]*Var, FileMap, error) {
 		return nil, nil, err
 	}
 
-	vars := make([]*Var, 0, len(varmap))
+	vars := make([]*Var, 0, len(vm))
 	files := make(FileMap)
-	for name, filemap := range varmap {
-		varFiles := make([]VarFile, 0, len(filemap))
-		ref := &Var{
+	for name, paths := range vm {
+		v := &Var{
 			Name: name,
 		}
-		for path, s := range filemap {
-			varFiles = append(varFiles, VarFile{
-				ref:    ref,
-				Path:   path,
-				Occurs: s,
-			})
-			files[path] = append(files[path], ref)
+		for _, path := range paths {
+			files[path] = append(files[path], v)
 		}
-		ref.Files = varFiles
-		vars = append(vars, ref)
+		v.Paths = make([]string, len(paths))
+		copy(v.Paths, paths)
+		vars = append(vars, v)
 	}
 
-	// sort vars in ascending order
+	// sort vars
 	sort.Slice(vars, func(i, j int) bool {
 		return vars[i].Name < vars[j].Name
 	})
 	return vars, files, nil
 }
 
-func ScanFile(path string) (map[string][][]int, error) {
+func ScanFile(path string) ([][]byte, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	re := regexp.MustCompile(`\{\{\$[A-Za-z]+\}\}`)
-	return matchVars(b, re), nil
-}
-
-func matchVars(src []byte, re *regexp.Regexp) map[string][][]int {
-	m := make(map[string][][]int)
-	matches := re.FindAllIndex(src, -1)
-	for _, idx := range matches {
-		v := string(src[idx[0]:idx[1]])
-		m[v] = append(m[v], idx)
-	}
-	return m
+	return re.FindAll(b, -1), nil
 }
 
 func IsDir(path string) (bool, error) {
