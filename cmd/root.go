@@ -29,7 +29,7 @@ var rootCmd = &cobra.Command{
 	Use:   "gr-cli",
 	Short: "A simple template generator",
 	Long:  "gr is a cli written in Go to generate templates with user defined variables",
-	RunE:  runE,
+	RunE:  runCmd,
 }
 
 func init() {
@@ -52,7 +52,11 @@ func validate(args []string) error {
 }
 
 // command entry point
-func runE(cmd *cobra.Command, args []string) error {
+func runCmd(cmd *cobra.Command, args []string) error {
+	return run(args)
+}
+
+func run(args []string) error {
 	if err := validate(args); err != nil {
 		return err
 	}
