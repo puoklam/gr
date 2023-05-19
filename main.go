@@ -1,20 +1,12 @@
 package main
 
 import (
-	"log"
-
 	"github.com/puoklam/gr/cmd"
+	"github.com/puoklam/gr/log"
 )
 
 func main() {
-	// entries, err := os.ReadDir("../gr")
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-	// for _, entry := range entries {
-	// 	fmt.Println(entry.IsDir(), entry.Name())
-	// }
-
+	defer log.Clear()
 	if err := cmd.Exec(); err != nil {
 		log.Fatal(err)
 	}

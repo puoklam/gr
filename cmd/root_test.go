@@ -19,16 +19,16 @@ func (cb ClosingBuffer) Close() error {
 }
 
 func TestRootCmd(t *testing.T) {
-	path, err := os.MkdirTemp("", "root-cmd")
-	srcDir = "./testdata/root/src/"
-	defer os.RemoveAll(path)
+	src := "./testdata/root/src/"
+	dst, err := os.MkdirTemp("", "root-cmd")
+	defer os.RemoveAll(dst)
 	assertNoErr(t, err)
 
 	r := ClosingBuffer{
 		bytes.NewBufferString("1\n"),
 	}
 	prompt.SetStdin(r)
-	err = run([]string{path})
+	err = run([]string{src, dst})
 	assertNoErr(t, err)
 }
 

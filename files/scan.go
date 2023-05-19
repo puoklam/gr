@@ -17,7 +17,8 @@ type Var struct {
 
 type FileMap = map[string][]*Var
 
-func ScanDir(dir string) ([]*Var, FileMap, error) {
+func ScanDir(src string) ([]*Var, FileMap, error) {
+	src = filepath.Clean(src)
 	// varname -> file path
 	vm := make(map[string][]string)
 
@@ -39,7 +40,7 @@ func ScanDir(dir string) ([]*Var, FileMap, error) {
 		return nil
 	}
 
-	err := filepath.WalkDir(dir, fs.WalkDirFunc(walk))
+	err := filepath.WalkDir(src, fs.WalkDirFunc(walk))
 	if err != nil {
 		return nil, nil, err
 	}

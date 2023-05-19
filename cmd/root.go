@@ -12,16 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// flags
-var (
-	srcDir  string
-	srcFile string
-	// exclude string
-)
-
 var ErrInvalidSrcDir = errors.New("invalid source directory")
 var ErrInvalidSrcFile = errors.New("invalid source file")
 var ErrInvalidDst = errors.New("invalid destination")
+var ErrNoSrc = errors.New("source not provided")
 var ErrNoDst = errors.New("destination not provided")
 var ErrDstNotDir = errors.New("destination not a directory")
 
@@ -32,18 +26,15 @@ var rootCmd = &cobra.Command{
 	RunE:  runCmd,
 }
 
-func init() {
-	rootCmd.Flags().StringVarP(&srcDir, "src", "s", "", "Source directory to read from")
-	rootCmd.Flags().StringVarP(&srcFile, "file", "f", "", "Source file to read from")
-	rootCmd.MarkFlagsMutuallyExclusive("src", "file")
-}
-
 // validate command arguments and flags
 func validate(args []string) error {
 	if len(args) < 1 {
+		return ErrNoSrc
+	}
+	if len(args) < 2 {
 		return ErrNoDst
 	}
-	if ok, err := files.IsDir(args[0]); err != nil {
+	if ok, err := files.IsDir(args[1]); err != nil {
 		return err
 	} else if !ok {
 		return ErrDstNotDir
@@ -60,8 +51,8 @@ func run(args []string) error {
 	if err := validate(args); err != nil {
 		return err
 	}
-	dst := args[0]
-	vars, filemap, err := files.ScanDir(srcDir)
+	src, dst := args[0], args[1]
+	vars, filemap, err := files.ScanDir(src)
 	if err != nil {
 		return err
 	}
@@ -73,7 +64,7 @@ func run(args []string) error {
 		v.Replace = s
 		v.Temp = randString(8)
 	}
-	return files.Generate(srcDir, dst, filemap)
+	return files.Generate(src, dst, filemap)
 }
 
 func Exec() error {
